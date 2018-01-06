@@ -1,11 +1,14 @@
 package main
 
 import (
+	"os"
+
 	"github.com/scaleway/scaleway-cli/pkg/api"
 	"github.com/scaleway/scaleway-cli/pkg/config"
 )
 
 var endpoint *api.ScalewayAPI
+var gateway = os.Getenv("SCW_GATEWAY")
 
 func init() {
 	config, err := config.GetConfig()
@@ -38,18 +41,20 @@ func terminateServer(id string) {
 }
 
 func createServer(name string, comercialType string, image *string, ipv4 string, hasIPv6 bool, tags []string) error {
+	f := false
 	id, err := endpoint.PostServer(api.ScalewayServerDefinition{
-		Name:           name,
-		Tags:           tags,
-		CommercialType: comercialType,
-		Image:          image,
-		PublicIP:       ipv4,
-		EnableIPV6:     hasIPv6,
+		Name:              name,
+		Tags:              tags,
+		CommercialType:    comercialType,
+		Image:             image,
+		PublicIP:          ipv4,
+		EnableIPV6:        hasIPv6,
+		DynamicIPRequired: &f,
 	})
 	if err != nil {
 		return err
 	}
 	api.StartServer(endpoint, id, true)
-	api.WaitForServerReady(endpoint, id, "")
+	api.WaitForServerReady(endpoint, id, gateway)
 	return nil
 }
