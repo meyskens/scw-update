@@ -566,8 +566,12 @@ func WaitForServerReady(api *ScalewayAPI, serverID, gateway string) (*ScalewaySe
 		}
 
 		if gateway == "" {
-			dest := fmt.Sprintf("%s:22", server.PublicAddress.IP)
-			log.Debugf("Waiting for server SSH port %s", dest)
+			ip := server.PublicAddress.IP
+			if ip == "" && server.EnableIPV6 {
+				ip = fmt.Sprintf("[%s]", server.IPV6.Address)
+			}
+			dest := fmt.Sprintf("%s:22", ip)
+			log.Infof("Waiting for server SSH port %s", dest)
 			err = utils.WaitForTCPPortOpen(dest)
 			if err != nil {
 				promise <- false
