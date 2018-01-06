@@ -8,6 +8,8 @@ import (
 	"github.com/scaleway/scaleway-cli/pkg/api"
 )
 
+var images = map[string]*api.ScalewayImage{}
+
 func main() {
 	fmt.Println("Scaleway mass updater")
 	fmt.Println("Copyright 2018 Maartje Eyskens")
@@ -32,10 +34,17 @@ func main() {
 }
 
 func replaceServer(server api.ScalewayServer) {
-	image, err := getImage(os.Args[2], server.Arch)
-	if err != nil {
-		fmt.Println("Image not found for", server.Arch)
-		return
+	var image *api.ScalewayImage
+	if i, ok := images[server.Arch]; ok && i != nil {
+		image = i
+	} else {
+		var err error
+		image, err = getImage(os.Args[2], server.Arch)
+		if err != nil {
+			fmt.Println("Image not found for", server.Arch)
+			return
+		}
+		images[server.Arch] = image
 	}
 
 	name := server.Name
